@@ -5,49 +5,54 @@ import json
 import urllib
 import re
 
-personality = 'Karl Marx'
-urllib.quote(personality)
 
-r = requests.get('https://en.wikipedia.org/w/api.php?format=json'
-                 '&action=query&prop=extracts&exintro&explaintext'
-                 '&redirects=1&titles=%s' % personality)
+def main():
+    personality = 'Karl Marx'
+    urllib.quote(personality)
 
-j = json.loads(r.text)
-bio = json.dumps(j['query']['pages']['16743']['extract'],
-                 sort_keys=True, indent=4, separators=(',', ': '))
+    r = requests.get('https://en.wikipedia.org/w/api.php?format=json'
+                     '&action=query&prop=extracts&exintro&explaintext'
+                     '&redirects=1&titles=%s' % personality)
+
+    j = json.loads(r.text)
+
+    bio = json.dumps(j['query']['pages']['16743']['extract'],
+                     sort_keys=True, indent=4, separators=(',', ': '))
+
+    bio = removeNameAndGenederedPronouns(bio, personality)
+
+    print bio
 
 
-def remove_name(bio):
-    """Removes all instances of the name by pronouns"""
+def removeNameAndGenederedPronouns(bio, personality):
     names = personality.split()
-    genitiv = [x + "'s" for x in names] + [x + "'" for x in names]
+
     gendered_pronouns = ['he', 'she', 'He', 'She']
 
-    possessive = ['his', 'her', 'His', 'Her'] + genitiv
+    replace_with_they = [personality] + names + gendered_pronouns
 
-    replaceables = [personality] + names + gendered_pronouns
+    genitiv = [x + "'s" for x in names] + [x + "'" for x in names]
 
-    for i in replaceables:
+    replace_with_their = ['his', 'her', 'His', 'Her'] + genitiv
+
+    for i in replace_with_they:
         bio = re.sub('\"' + i, 'This person', bio)
 
-        p = re.compile('(\\. )' + i)
-        bio = p.sub(r'\1They', bio)
+        bio = re.sub('(\\. )' + i, r'\1They', bio)
 
-        p = re.compile('(\\.)' + i)
-        bio = p.sub(r'\1 They', bio)
+        bio = re.sub('(\\.)' + i, r'\1 They', bio)
 
-        p = re.compile('(\\s)' + i + '[ ,\n]')
-        bio = p.sub(r'\1they ', bio)
+        bio = re.sub('(\\s)' + i + '[ ,\n]', r'\1they ', bio)
 
-    for i in possessive:
-        p = re.compile('(\\. )' + i)
-        bio = p.sub(r'\1Their', bio)
+    for i in replace_with_their:
+        bio = re.sub('(\\. )' + i, r'\1Their', bio)
 
-        p = re.compile('(\\.)' + i)
-        bio = p.sub(r'\1Their', bio)
+        bio = re.sub('(\\.)' + i, r'\1Their', bio)
 
-        p = re.compile('(\\s)' + i + ' ')
-        bio = p.sub(r'\1their ', bio)
+        bio = re.sub('(\\s)' + i + ' ', r'\1their ', bio)
+
+    return bio
 
 
-print bio
+if __name__ == '__main__':
+    main()
