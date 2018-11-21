@@ -16,34 +16,38 @@ j = json.loads(r.text)
 bio = json.dumps(j['query']['pages']['16743']['extract'],
                  sort_keys=True, indent=4, separators=(',', ': '))
 
-names = personality.split()
-genitiv = [x + "'s" for x in names] + [x + "'" for x in names]
-gendered_pronouns = ['he','she', 'He', 'She']
 
-possessive = ['his', 'her', 'His', 'Her'] + genitiv
+def remove_name(bio):
+    """Removes all instances of the name by pronouns"""
+    names = personality.split()
+    genitiv = [x + "'s" for x in names] + [x + "'" for x in names]
+    gendered_pronouns = ['he', 'she', 'He', 'She']
 
-replaceables = [personality] + names + gendered_pronouns
+    possessive = ['his', 'her', 'His', 'Her'] + genitiv
 
-for i in replaceables:
-    bio = re.sub('\"' + i, 'This person', bio)
-    
-    p = re.compile('(\. )' + i)
-    bio = p.sub(r'\1They', bio)
+    replaceables = [personality] + names + gendered_pronouns
 
-    p = re.compile('(\.)' + i)
-    bio = p.sub(r'\1 They', bio)
+    for i in replaceables:
+        bio = re.sub('\"' + i, 'This person', bio)
 
-    p = re.compile('(\s)' + i + '[ ,\n]' )
-    bio = p.sub(r'\1they ', bio)
+        p = re.compile('(\\. )' + i)
+        bio = p.sub(r'\1They', bio)
 
-for i in possessive:
-    p = re.compile('(\. )' + i)
-    bio = p.sub(r'\1Their', bio)
+        p = re.compile('(\\.)' + i)
+        bio = p.sub(r'\1 They', bio)
 
-    p = re.compile('(\.)' + i)
-    bio = p.sub(r'\1Their', bio)
+        p = re.compile('(\\s)' + i + '[ ,\n]')
+        bio = p.sub(r'\1they ', bio)
 
-    p = re.compile('(\s)' + i + ' ')
-    bio = p.sub(r'\1their ', bio)
+    for i in possessive:
+        p = re.compile('(\\. )' + i)
+        bio = p.sub(r'\1Their', bio)
+
+        p = re.compile('(\\.)' + i)
+        bio = p.sub(r'\1Their', bio)
+
+        p = re.compile('(\\s)' + i + ' ')
+        bio = p.sub(r'\1their ', bio)
+
 
 print bio
